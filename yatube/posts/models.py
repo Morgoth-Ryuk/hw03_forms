@@ -5,14 +5,9 @@ User = get_user_model()
 
 
 class Group(models.Model):
-    '''
+    """
     Модели группы.
-    '''
-
-    class Meta:
-        verbose_name = 'Группа'
-        verbose_name_plural = 'Группы'
-
+    """
     title = models.CharField('Название группы',
                              help_text='Заполните данные группы',
                              max_length=200)
@@ -22,19 +17,18 @@ class Group(models.Model):
     description = models.TextField('Описание группы',
                                    help_text='Заполните описание группы')
 
+    class Meta:
+        verbose_name = 'Группа'
+        verbose_name_plural = 'Группы'
+
     def __str__(self):
         return self.title
 
 
 class Post(models.Model):
-    '''
+    """
     Модели публикации.
-    '''
-
-    class Meta:
-        verbose_name = 'Публикация'
-        verbose_name_plural = 'Публикации'
-
+    """
     text = models.TextField('Текст публикации',
                             help_text='Введите текст публикации')
     pub_date = models.DateTimeField(
@@ -58,6 +52,10 @@ class Post(models.Model):
         help_text=('Выберите, относится ли публикация '
                    'к какой-либо группе, или оставьте поле пустым')
     )
+
+    class Meta:
+        verbose_name = 'Публикация'
+        verbose_name_plural = 'Публикации'
 
     def __str__(self):
         return self.text

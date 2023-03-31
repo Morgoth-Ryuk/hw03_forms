@@ -1,14 +1,11 @@
 from django.contrib import admin
-
-
-from .models import Post
-from .models import Group
+from .models import Post, Group
 
 
 class PostAdmin(admin.ModelAdmin):
-    '''
+    """
     Регистрация и настройка отображения модели Post в админке.
-    '''
+    """
     list_display = (
         'pk',
         'text',

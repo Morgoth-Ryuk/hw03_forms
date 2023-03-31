@@ -1,35 +1,22 @@
-from django.shortcuts import render, get_object_or_404, get_list_or_404
-from django.core.paginator import Paginator
+from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import get_list_or_404
 from .models import Post, Group
-from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from .forms import PostForm
+from .utils import paginator_my
 
 
 User = get_user_model()
 QUANTITY_OF_POSTS_ON_PAGE = 10
 
 
-def authorized_only(func):
-    '''
-    Проверка авторизации.
-    '''
-    def check_user(request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return func(request, *args, **kwargs)
-        return redirect('/auth/login/')
-    return check_user
-
-
 def index(request):
-    '''
+    """
     Главная страница.
-    '''
+    """
     post_list = get_list_or_404(Post.objects.order_by('-pub_date'))
-    paginator = Paginator(post_list, QUANTITY_OF_POSTS_ON_PAGE)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    page_obj = paginator_my(request, post_list, QUANTITY_OF_POSTS_ON_PAGE)
     context = {
         'page_obj': page_obj,
     }
@@ -37,16 +24,13 @@ def index(request):
 
 
 def groups(request, slug):
-    '''
+    """
     Посты Группы.
-    '''
+    """
     template = 'posts/group_list.html'
     group = get_object_or_404(Group, slug=slug)
     post_list = group.posts.all().order_by('-pub_date')
-    paginator = Paginator(post_list, QUANTITY_OF_POSTS_ON_PAGE)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
+    page_obj = paginator_my(request, post_list, QUANTITY_OF_POSTS_ON_PAGE)
     context = {
         'group': group,
         'page_obj': page_obj,
@@ -55,15 +39,13 @@ def groups(request, slug):
 
 
 def profile(request, username):
-    '''
+    """
     Профиль.
-    '''
+    """
     author = get_object_or_404(User, username=username)
     post_list = Post.objects.filter(author=author).order_by('-pub_date')
     post_count = Post.objects.filter(author=author).count()
-    paginator = Paginator(post_list, QUANTITY_OF_POSTS_ON_PAGE)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    page_obj = paginator_my(request, post_list, QUANTITY_OF_POSTS_ON_PAGE)
     template = 'posts/profile.html'
     context = {
         'author': author,
@@ -75,9 +57,9 @@ def profile(request, username):
 
 
 def post_detail(request, post_id):
-    '''
+    """
     Посты автора.
-    '''
+    """
     template = 'posts/post_detail.html'
     post = Post.objects.get(id=post_id)
     post_count = post.author.posts.count()
@@ -92,9 +74,11 @@ def post_detail(request, post_id):
     return render(request, template, context)
 
 
-@authorized_only
 @login_required
 def post_create(request):
+    """
+    Создание поста.
+    """
     if request.method == 'POST':
         form = PostForm(request.POST)
         if form.is_valid():
@@ -110,11 +94,10 @@ def post_create(request):
     return render(request, template, context)
 
 
-@authorized_only
 def post_edit(request, post_id):
-    '''
+    """
     Редактирование поста.
-    '''
+    """
     is_edit = True
     post = Post.objects.get(id=post_id)
     group = post.group
