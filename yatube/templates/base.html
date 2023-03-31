@@ -12,8 +12,9 @@
       {% include 'includes/header.html' %}
     </header>
     <main>
-      {% block content %}
-        Контент не подвезли :(
+      {% block content %} 
+      {% block header %} {% endblock %}
+      Контент не подвезли
       {% endblock %}
     </main>
     <footer>

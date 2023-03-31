@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, get_list_or_404
 from django.core.paginator import Paginator
 from .models import Post, Group
 from django.shortcuts import redirect, render
@@ -22,12 +22,11 @@ def authorized_only(func):
     return check_user
 
 
-@login_required
 def index(request):
     '''
     Главная страница.
     '''
-    post_list = Post.objects.all().order_by('-pub_date')
+    post_list = get_list_or_404(Post.objects.order_by('-pub_date'))
     paginator = Paginator(post_list, QUANTITY_OF_POSTS_ON_PAGE)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -37,7 +36,6 @@ def index(request):
     return render(request, 'posts/index.html', context)
 
 
-@authorized_only
 def groups(request, slug):
     '''
     Посты Группы.
@@ -56,7 +54,6 @@ def groups(request, slug):
     return render(request, template, context)
 
 
-@authorized_only
 def profile(request, username):
     '''
     Профиль.
@@ -77,14 +74,13 @@ def profile(request, username):
     return render(request, template, context)
 
 
-@authorized_only
 def post_detail(request, post_id):
     '''
     Посты автора.
     '''
     template = 'posts/post_detail.html'
     post = Post.objects.get(id=post_id)
-    post_count = Post.objects.filter(author_id=post.author.id).count()
+    post_count = post.author.posts.count()
     author = post.author
     date_of_post = post.pub_date
     context = {
@@ -97,21 +93,21 @@ def post_detail(request, post_id):
 
 
 @authorized_only
+@login_required
 def post_create(request):
-    '''
-    Добавление поста.
-    '''
-    # username = get_object_or_404(User, username=request.user)
     if request.method == 'POST':
         form = PostForm(request.POST)
         if form.is_valid():
             post = form.save(commit=False)
             post.author = request.user
             post.save()
-            return redirect('posts:profile', username=post.author)
-        return render(request, 'create_post.html', {'form': form})
+            return redirect('posts:profile', request.user.username)
     form = PostForm()
-    return render(request, 'posts/create_post.html', {'form': form})
+    template = 'posts/create_post.html'
+    context = {
+        'form': form,
+    }
+    return render(request, template, context)
 
 
 @authorized_only
