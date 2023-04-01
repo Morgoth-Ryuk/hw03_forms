@@ -4,7 +4,7 @@ from .models import Post, Group
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from .forms import PostForm
-from .utils import paginator_my
+from .utils import paginator_calculate
 
 
 User = get_user_model()
@@ -16,7 +16,9 @@ def index(request):
     Главная страница.
     """
     post_list = get_list_or_404(Post.objects.order_by('-pub_date'))
-    page_obj = paginator_my(request, post_list, QUANTITY_OF_POSTS_ON_PAGE)
+    page_obj = paginator_calculate(request,
+                                   post_list,
+                                   QUANTITY_OF_POSTS_ON_PAGE)
     context = {
         'page_obj': page_obj,
     }
@@ -30,7 +32,9 @@ def groups(request, slug):
     template = 'posts/group_list.html'
     group = get_object_or_404(Group, slug=slug)
     post_list = group.posts.all().order_by('-pub_date')
-    page_obj = paginator_my(request, post_list, QUANTITY_OF_POSTS_ON_PAGE)
+    page_obj = paginator_calculate(request,
+                                   post_list,
+                                   QUANTITY_OF_POSTS_ON_PAGE)
     context = {
         'group': group,
         'page_obj': page_obj,
@@ -43,9 +47,11 @@ def profile(request, username):
     Профиль.
     """
     author = get_object_or_404(User, username=username)
-    post_list = Post.objects.filter(author=author).order_by('-pub_date')
-    post_count = Post.objects.filter(author=author).count()
-    page_obj = paginator_my(request, post_list, QUANTITY_OF_POSTS_ON_PAGE)
+    post_list = author.posts.order_by('-pub_date')
+    post_count = post_list.count()
+    page_obj = paginator_calculate(request,
+                                   post_list,
+                                   QUANTITY_OF_POSTS_ON_PAGE)
     template = 'posts/profile.html'
     context = {
         'author': author,
@@ -61,7 +67,7 @@ def post_detail(request, post_id):
     Посты автора.
     """
     template = 'posts/post_detail.html'
-    post = Post.objects.get(id=post_id)
+    post = Post.objects.get(pk=post_id)
     post_count = post.author.posts.count()
     author = post.author
     date_of_post = post.pub_date
