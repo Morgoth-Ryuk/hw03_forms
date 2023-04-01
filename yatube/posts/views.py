@@ -67,7 +67,7 @@ def post_detail(request, post_id):
     Посты автора.
     """
     template = 'posts/post_detail.html'
-    post = Post.objects.get(pk=post_id)
+    post = get_object_or_404(Post, pk=post_id)
     post_count = post.author.posts.count()
     author = post.author
     date_of_post = post.pub_date
@@ -105,7 +105,7 @@ def post_edit(request, post_id):
     Редактирование поста.
     """
     is_edit = True
-    post = Post.objects.get(id=post_id)
+    post = get_object_or_404(Post, pk=post_id)
     group = post.group
     if post.author == request.user:
         if request.method == 'POST':
